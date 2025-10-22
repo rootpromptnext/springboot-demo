@@ -1,4 +1,5 @@
 # Spring Boot Demo Application
+
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/yourusername/springboot-demo)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/yourusername/springboot-demo)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/yourusername/springboot-demo)
