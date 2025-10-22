@@ -34,7 +34,6 @@
 
     <build>
         <plugins>
-
             <!-- Spring Boot Maven Plugin -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -49,7 +48,7 @@
                 </executions>
             </plugin>
 
-            <!-- Maven Compiler Plugin (Java 17) -->
+            <!-- Maven Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -61,20 +60,32 @@
                 </configuration>
             </plugin>
 
-            <!-- JaCoCo for coverage -->
+            <!-- JaCoCo Plugin -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
                 <executions>
+                    <!-- Prepare agent before tests -->
                     <execution>
                         <id>prepare-agent</id>
-                        <goals><goal>prepare-agent</goal></goals>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
                     </execution>
+                    <!-- Generate XML report after tests -->
                     <execution>
                         <id>report</id>
-                        <phase>test</phase>
-                        <goals><goal>report</goal></goals>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/site/jacoco</outputDirectory>
+                            <xml>true</xml>
+                            <csv>false</csv>
+                            <html>true</html>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -85,11 +96,12 @@
     <profiles>
         <profile>
             <id>dev</id>
-            <activation><activeByDefault>true</activeByDefault></activation>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
         </profile>
         <profile>
             <id>qa</id>
         </profile>
     </profiles>
-
 </project>
