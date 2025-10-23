@@ -52,7 +52,6 @@ jobs:
         run: |
           echo "Running TruffleHog secret scan..."
           trufflehog filesystem . > scan_output.log 2>&1 || true
-      
           # Check for secrets
           if grep -q "Secrets detected!" scan_output.log; then
             echo "Secrets detected! Please remove hardcoded credentials or API keys."
@@ -89,7 +88,6 @@ jobs:
       - name: Run Snyk scan (SCA)
         run: snyk monitor --all-projects
 
-
       # OWASP Dependency-Check
       #- name: Install OWASP Dependency-Check CLI
       #  run: |
@@ -108,7 +106,7 @@ jobs:
       #      --out dependency-check-report \
       #      --nvdApiKey ${{ secrets.NVD_API_KEY }} \
       #      --ossIndexUser ${{ secrets.OSSINDEX_USERNAME }} \
-      #      --ossIndexPassword ${{ secrets.OSSINDEX_PASSWORD }} || true  # always pass
+      #      --ossIndexPassword ${{ secrets.OSSINDEX_PASSWORD }} || true
           
       #- name: Upload Dependency Check Report
       #  uses: actions/upload-artifact@v4
@@ -123,11 +121,13 @@ jobs:
 
       # Rename JAR
       - name: Rename JAR for Docker
-        run: mv target/*-SNAPSHOT.jar target/app.jar || mv target/*.jar target/app.jar
+        run: |
+          mv target/*-SNAPSHOT.jar target/app.jar || mv target/*.jar target/app.jar
 
       # Docker Build & Push
       - name: Log in to GitHub Container Registry
-        run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u rootpromptnext --password-stdin
+        run: |
+          echo "$GITHUB_TOKEN" | docker login ghcr.io -u rootpromptnext --password-stdin
 
       # Build Docker image
       - name: Build Docker image
@@ -143,11 +143,10 @@ jobs:
       #  with:
       #    image-ref: ghcr.io/rootpromptnext/springboot-demo:${{ env.SHORT_SHA }}
       #    format: table
-      #    exit-code: 0    # always pass
-      #    # exit-code: 1  # uncomment to demo fail
+      #    exit-code: 0
       #    severity: CRITICAL,HIGH
 
-      - name: Install Trivy 
+      - name: Install Trivy
         run: |
           wget https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh
           bash install.sh
@@ -155,6 +154,7 @@ jobs:
           mv ./bin/trivy $HOME/.local/bin/
           echo "$HOME/.local/bin" >> $GITHUB_PATH
           trivy --version
+
       - name: Run Trivy scan and save report
         run: |
           trivy image \
@@ -169,7 +169,6 @@ jobs:
           name: trivy-report
           path: trivy-report.json
           
-
       # Push Docker Images
       #- name: Push Docker images
       #  run: |
