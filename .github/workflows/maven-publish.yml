@@ -77,15 +77,18 @@ jobs:
       # Snyk Scan - SCA
       - name: Download Snyk CLI
         run: |
-          wget -O snyk-linux https://github.com/snyk/cli/releases/download/v1.1294.3/snyk-linux
-          chmod +x snyk-linux
-          mv snyk-linux $HOME/snyk
-          echo "$HOME" >> $GITHUB_PATH
+          wget -O snyk https://github.com/snyk/cli/releases/download/v1.1294.3/snyk-linux
+          chmod +x snyk
+          sudo mv snyk /usr/local/bin/snyk
       
-      - name: Run Snyk scan
-        run: snyk monitor --all-projects
+      - name: Authenticate Snyk CLI
+        run: snyk auth $SNYK_TOKEN
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      
+      - name: Run Snyk scan (SCA)
+        run: snyk monitor --all-projects
+
 
       # OWASP Dependency-Check
       #- name: Install OWASP Dependency-Check CLI
