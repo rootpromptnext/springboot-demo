@@ -2,7 +2,7 @@ name: CI/CD Spring Boot Secure Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [main1]
 
 jobs:
   build-and-publish:
@@ -37,18 +37,7 @@ jobs:
       #  uses: trufflesecurity/trufflehog@v3.90.0
       #  with:
       #    path: .
-
-      # SonarQube Analysis - SAST
-      #- name: Run SonarQube Analysis
-      #  uses: sonarsource/sonarqube-scan-action@v2
-      #  with:
-      #    projectBaseDir: .
-      #    args: >
-      #      -Dsonar.projectKey=rootpromptnext_springboot-demo
-      #      -Dsonar.organization=rootpromptnext
-      #      -Dsonar.host.url=https://sonarcloud.io
-      #      -Dsonar.login=${{ secrets.SONAR_TOKEN }}        
-
+      
       - name: Install TruffleHog CLI
         run: |
           wget https://github.com/trufflesecurity/trufflehog/releases/download/v3.90.11/trufflehog_3.90.11_linux_amd64.tar.gz -O trufflehog.tar.gz
@@ -75,18 +64,30 @@ jobs:
             cat scan_output.log
           fi
 
-      # Snyk Scan - SCA
-      #- name: Download Snyk CLI
-      #  run: |
-      #    wget -O snyk-linux https://github.com/snyk/cli/releases/download/v1.1294.3/snyk-linux
-      #    chmod +x snyk-linux
-      #    mv snyk-linux $HOME/snyk
-      #    echo "$HOME" >> $GITHUB_PATH
+      # SonarQube Analysis - SAST
+      #- name: Run SonarQube Analysis
+      #  uses: sonarsource/sonarqube-scan-action@v2
+      #  with:
+      #    projectBaseDir: .
+      #    args: >
+      #      -Dsonar.projectKey=rootpromptnext_springboot-demo
+      #      -Dsonar.organization=rootpromptnext
+      #      -Dsonar.host.url=https://sonarcloud.io
+      #      -Dsonar.login=${{ secrets.SONAR_TOKEN }}  
+
       
-      #- name: Run Snyk scan
-      #  run: snyk monitor --all-projects
-      #  env:
-      #    SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      # Snyk Scan - SCA
+      - name: Download Snyk CLI
+        run: |
+          wget -O snyk-linux https://github.com/snyk/cli/releases/download/v1.1294.3/snyk-linux
+          chmod +x snyk-linux
+          mv snyk-linux $HOME/snyk
+          echo "$HOME" >> $GITHUB_PATH
+      
+      - name: Run Snyk scan
+        run: snyk monitor --all-projects
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
       # OWASP Dependency-Check
       #- name: Install OWASP Dependency-Check CLI
