@@ -129,8 +129,8 @@ jobs:
         run: |
           echo "$GITHUB_TOKEN" | docker login ghcr.io -u rootpromptnext --password-stdin
 
-      # Build Docker image
-      - name: Build Docker image
+      # Build Docker image - GHCR
+      - name: Build Docker image - GHCR
         run: |
           SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
           echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_ENV
@@ -146,7 +146,8 @@ jobs:
       #    exit-code: 0
       #    severity: CRITICAL,HIGH
 
-      - name: Install Trivy
+      # Install Trivy CLI
+      - name: Install Trivy - GHCR
         run: |
           wget https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh
           bash install.sh
@@ -154,8 +155,9 @@ jobs:
           mv ./bin/trivy $HOME/.local/bin/
           echo "$HOME/.local/bin" >> $GITHUB_PATH
           trivy --version
-
-      - name: Run Trivy scan and save report
+          
+      # Trivy Scan - GHCR
+      - name: Run Trivy scan and save report - GHCR
         run: |
           trivy image \
             --format json \
@@ -163,13 +165,13 @@ jobs:
             --severity CRITICAL,HIGH \
             ghcr.io/rootpromptnext/springboot-demo:${{ env.SHORT_SHA }}
       
-      - name: Upload Trivy Report
+      - name: Upload Trivy Report - GHCR
         uses: actions/upload-artifact@v4
         with:
-          name: trivy-report
-          path: trivy-report.json
+          name: trivy-ghcr-report
+          path: trivy-ghcr-report.json
           
-      # Push Docker Images
+      # Push Docker Images - GHCR
       - name: Push Docker images
         run: |
           docker push ghcr.io/rootpromptnext/springboot-demo:${{ env.SHORT_SHA }}
@@ -178,7 +180,7 @@ jobs:
       # Build Docker Image - Docker Hub
       - name: Build Docker image (Docker Hub)
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USER }}/springboot-demo:$SHORT_SHA \
+          docker build -t ${{ secrets.DOCKERHUB_USER }}/springboot-demo:${{ env.SHORT_SHA }} \
                        -t ${{ secrets.DOCKERHUB_USER }}/springboot-demo:latest .
 
       # Trivy Scan - Docker Hub
@@ -189,18 +191,16 @@ jobs:
             --output trivy-dockerhub-report.json \
             --severity CRITICAL,HIGH \
             ${{ secrets.DOCKERHUB_USER }}/springboot-demo:${{ env.SHORT_SHA }}
-            
-
+      
       - name: Upload Trivy Docker Hub Report
         uses: actions/upload-artifact@v4
         with:
           name: trivy-dockerhub-report
-          path: trivy-dockerhub-report.json                           
-
+          path: trivy-dockerhub-report.json
+      
       # Push Docker Images - Docker Hub
       - name: Push Docker images to Docker Hub
         run: |
           echo "${{ secrets.DOCKERHUB_PASS }}" | docker login -u ${{ secrets.DOCKERHUB_USER }} --password-stdin
           docker push ${{ secrets.DOCKERHUB_USER }}/springboot-demo:${{ env.SHORT_SHA }}
           docker push ${{ secrets.DOCKERHUB_USER }}/springboot-demo:latest
-
