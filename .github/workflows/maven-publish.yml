@@ -1,7 +1,7 @@
 name: CI/CD Spring Boot Secure Pipeline
 on:
   push:
-    branches: [main1]
+    branches: [main]
 
 jobs:
   build-and-publish:
@@ -238,7 +238,10 @@ jobs:
         with:
           name: trivy-ecr-report
           path: trivy-ecr-report.json
-      
+
+      # aws ecr describe-repositories --repository-names springboot-demo || aws ecr create-repository --repository-name springboot-demo
+      # aws ecr delete-repository --repository-name springboot-demo --force
+   
       # Push Docker Images - ECR
       - name: Push Docker images to ECR
         run: |
