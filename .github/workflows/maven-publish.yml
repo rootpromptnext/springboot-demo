@@ -1,7 +1,7 @@
 name: CI/CD Spring Boot Secure Pipeline
 on:
   push:
-    branches: [main]
+    branches: [main1]
 
 jobs:
   build-and-publish:
@@ -164,7 +164,7 @@ jobs:
         run: |
           trivy image \
             --format json \
-            --output trivy-report.json \
+            --output trivy-ghcr-report.json \
             --severity CRITICAL,HIGH \
             ghcr.io/rootpromptnext/springboot-demo:${{ env.SHORT_SHA }}
       
