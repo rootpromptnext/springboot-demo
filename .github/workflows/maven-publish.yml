@@ -63,7 +63,7 @@ jobs:
       - name: Run TruffleHog Secret Scan
         run: |
           echo "Running TruffleHog secret scan..."
-          trufflehog . > scan_output.log 2>&1 || true
+          trufflehog filesystem . > scan_output.log 2>&1 || true
       
           if grep -q "verified_secrets\":0" scan_output.log && ! grep -q "verified_secrets\": [1-9]" scan_output.log; then
             echo "No secrets found. Proceeding to next stage..."
@@ -72,6 +72,7 @@ jobs:
             cat scan_output.log
             exit 1
           fi
+
 
       # Snyk Scan - SCA
       #- name: Download Snyk CLI
