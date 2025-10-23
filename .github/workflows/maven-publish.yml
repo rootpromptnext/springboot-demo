@@ -49,6 +49,7 @@ jobs:
       #      -Dsonar.host.url=https://sonarcloud.io
       #      -Dsonar.login=${{ secrets.SONAR_TOKEN }}        
 
+      # Step: Install TruffleHog CLI
       - name: Install TruffleHog CLI
         run: |
           wget https://github.com/trufflesecurity/trufflehog/releases/download/v3.90.11/trufflehog_3.90.11_linux_amd64.tar.gz -O trufflehog.tar.gz
@@ -58,11 +59,21 @@ jobs:
           mv trufflehog ~/.local/bin/
           echo "$HOME/.local/bin" >> $GITHUB_PATH
           trufflehog --version
-
+      
+      # Step: Run TruffleHog Secret Scan
       - name: Run TruffleHog Secret Scan
         run: |
           echo "Running TruffleHog secret scan..."
-          trufflehog filesystem --directory=. || true
+          trufflehog filesystem --directory=. --json > trufflehog_output.json || true
+      
+          # Check if any secrets were found
+          if grep -q '"DetectorType":' trufflehog_output.json; then
+            echo "Secrets detected! Please remove hardcoded credentials or API keys before proceeding."
+            cat trufflehog_output.json | jq '.Results[] | {Source, DetectorName, Raw}' || true
+            exit 1
+          else
+            echo "No secrets found! Proceeding to next stage..."
+          fi
 
       # Snyk Scan - SCA
       #- name: Download Snyk CLI
