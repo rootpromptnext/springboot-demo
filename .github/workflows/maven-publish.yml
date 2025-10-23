@@ -75,7 +75,30 @@ jobs:
       #      -Dsonar.organization=rootpromptnext
       #      -Dsonar.host.url=https://sonarcloud.io
       #      -Dsonar.login=${{ secrets.SONAR_TOKEN }}  
+
+      # Build, Test, and Sonar Analysis with JaCoCo + CLI Scanner
+      # Build & Test
+      - name: Build & Test (Maven)
+        run: mvn clean compile test verify -B
       
+      # SonarCloud Analysis
+      - name: SonarCloud Analysis (JaCoCo)
+        run: |
+          SONAR_SCANNER_VERSION=6.2.1.4610
+          wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux-x64.zip
+          unzip -q sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux-x64.zip
+          export PATH=$PATH:$(pwd)/sonar-scanner-${SONAR_SCANNER_VERSION}-linux-x64/bin
+          sonar-scanner \
+            -Dsonar.projectKey=springboot-demo \
+            -Dsonar.organization=rootpromptnext \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.sources=src/main/java \
+            -Dsonar.tests=src/test/java \
+            -Dsonar.java.binaries=target/classes \
+            -Dsonar.junit.reportPaths=target/surefire-reports \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+
       # Snyk Scan - SCA
       - name: Download Snyk CLI
         run: |
@@ -118,9 +141,9 @@ jobs:
       #    path: dependency-check-report
 
       # Build, Compile, and Test with Maven
-      - name: Build & Test (Maven)
-        run: |
-          mvn clean compile test verify -B
+      #- name: Build & Test (Maven)
+      #  run: |
+      #    mvn clean compile test verify -B
 
       # Rename JAR
       - name: Rename JAR for Docker
