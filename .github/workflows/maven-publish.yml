@@ -82,6 +82,7 @@ jobs:
         run: mvn clean compile test verify -B
       
       # SonarCloud Analysis |Make sur you have manually created project in sonarcloud.io | Project key in Project Information
+      # Administration > Analysis Method - Disable Automatic to avoid "ERROR You are running CI analysis while Automatic Analysis is enabled. Please consider disabling one or the other"
       - name: SonarCloud Analysis (JaCoCo)
         run: |
           SONAR_SCANNER_VERSION=6.2.1.4610
