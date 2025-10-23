@@ -170,7 +170,8 @@ jobs:
           path: trivy-report.json
           
       # Push Docker Images
-      #- name: Push Docker images
-      #  run: |
-      #    docker push ghcr.io/rootpromptnext/springboot-demo:${{ env.SHORT_SHA }}
-      #    docker push ghcr.io/rootpromptnext/springboot-demo:latest
+      - name: Push Docker images
+        run: |
+          docker push ghcr.io/rootpromptnext/springboot-demo:${{ env.SHORT_SHA }}
+          docker push ghcr.io/rootpromptnext/springboot-demo:latest
+
