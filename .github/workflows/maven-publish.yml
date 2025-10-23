@@ -49,6 +49,17 @@ jobs:
       #      -Dsonar.host.url=https://sonarcloud.io
       #      -Dsonar.login=${{ secrets.SONAR_TOKEN }}        
 
+      - name: Install TruffleHog CLI
+        run: |
+          wget https://github.com/trufflesecurity/trufflehog/releases/download/v3.90.11/trufflehog_3.90.11_linux_amd64.tar.gz -O trufflehog.tar.gz
+          tar -xvf trufflehog.tar.gz
+          chmod +x trufflehog
+          mkdir -p ~/.local/bin
+          mv trufflehog ~/.local/bin/
+      
+      - name: Add TruffleHog to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
       - name: Run TruffleHog Secret Scan
         run: |
           echo "Running TruffleHog secret scan..."
