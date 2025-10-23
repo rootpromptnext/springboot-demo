@@ -1,7 +1,7 @@
 name: CI/CD Spring Boot Secure Pipeline
 on:
   push:
-    branches: [main]
+    branches: [main1]
 
 jobs:
   build-and-publish:
@@ -204,3 +204,42 @@ jobs:
           echo "${{ secrets.DOCKERHUB_PASS }}" | docker login -u ${{ secrets.DOCKERHUB_USER }} --password-stdin
           docker push ${{ secrets.DOCKERHUB_USER }}/springboot-demo:${{ env.SHORT_SHA }}
           docker push ${{ secrets.DOCKERHUB_USER }}/springboot-demo:latest
+
+      # Configure AWS Credentials for ECR
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1   # change to your region
+      
+      # Build Docker Image - ECR
+      - name: Build Docker image (ECR)
+        run: |
+          ECR_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/springboot-demo
+          docker build -t $ECR_URI:${{ env.SHORT_SHA }} \
+                       -t $ECR_URI:latest .
+      
+      # Trivy Scan - ECR
+      - name: Run Trivy scan on ECR image
+        run: |
+          ECR_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/springboot-demo
+          trivy image \
+            --format json \
+            --output trivy-ecr-report.json \
+            --severity CRITICAL,HIGH \
+            $ECR_URI:${{ env.SHORT_SHA }}
+      
+      - name: Upload Trivy ECR Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-ecr-report
+          path: trivy-ecr-report.json
+      
+      # Push Docker Images - ECR
+      - name: Push Docker images to ECR
+        run: |
+          ECR_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/springboot-demo
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_URI
+          docker push $ECR_URI:${{ env.SHORT_SHA }}
+          docker push $ECR_URI:latest
