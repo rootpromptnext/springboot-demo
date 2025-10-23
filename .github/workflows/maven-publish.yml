@@ -1,7 +1,7 @@
 name: CI/CD Spring Boot Secure Pipeline
 on:
   push:
-    branches: [main]
+    branches: [main1]
 
 jobs:
   build-and-publish:
@@ -116,20 +116,25 @@ jobs:
       #    name: dependency-check-report
       #    path: dependency-check-report
 
+      # Build, Compile, and Test with Maven
+      - name: Build & Test (Maven)
+        run: |
+          mvn clean compile test verify -B
+
       # Rename JAR
-      #- name: Rename JAR for Docker
-      #  run: mv target/*-SNAPSHOT.jar target/app.jar || mv target/*.jar target/app.jar
+      - name: Rename JAR for Docker
+        run: mv target/*-SNAPSHOT.jar target/app.jar || mv target/*.jar target/app.jar
 
       # Docker Build & Push
-      #- name: Log in to GitHub Container Registry
-      #  run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u rootpromptnext --password-stdin
+      - name: Log in to GitHub Container Registry
+        run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u rootpromptnext --password-stdin
 
       #- name: Build Docker image
-      #  run: |
-      #    SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
-      #    echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_ENV
-      #    docker build -t ghcr.io/rootpromptnext/springboot-demo:$SHORT_SHA \
-      #                 -t ghcr.io/rootpromptnext/springboot-demo:latest .
+        run: |
+          SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
+          echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_ENV
+          docker build -t ghcr.io/rootpromptnext/springboot-demo:$SHORT_SHA \
+                       -t ghcr.io/rootpromptnext/springboot-demo:latest .
 
       # Container Scan (Trivy)
       #- name: Run Trivy vulnerability scanner
