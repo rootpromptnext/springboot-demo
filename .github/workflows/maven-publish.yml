@@ -175,3 +175,32 @@ jobs:
           docker push ghcr.io/rootpromptnext/springboot-demo:${{ env.SHORT_SHA }}
           docker push ghcr.io/rootpromptnext/springboot-demo:latest
 
+      # Build Docker Image - Docker Hub
+      - name: Build Docker image (Docker Hub)
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USER }}/springboot-demo:$SHORT_SHA \
+                       -t ${{ secrets.DOCKERHUB_USER }}/springboot-demo:latest .
+
+      # Trivy Scan - Docker Hub
+      - name: Run Trivy scan on Docker Hub image
+        run: |
+          trivy image \
+            --format json \
+            --output trivy-dockerhub-report.json \
+            --severity CRITICAL,HIGH \
+            ${{ secrets.DOCKERHUB_USER }}/springboot-demo:${{ env.SHORT_SHA }}
+            
+
+      - name: Upload Trivy Docker Hub Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-dockerhub-report
+          path: trivy-dockerhub-report.json                           
+
+      # Push Docker Images - Docker Hub
+      - name: Push Docker images to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKERHUB_PASS }}" | docker login -u ${{ secrets.DOCKERHUB_USER }} --password-stdin
+          docker push ${{ secrets.DOCKERHUB_USER }}/springboot-demo:${{ env.SHORT_SHA }}
+          docker push ${{ secrets.DOCKERHUB_USER }}/springboot-demo:latest
+
