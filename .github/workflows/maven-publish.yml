@@ -1,0 +1,135 @@
+name: CI/CD Spring Boot Secure Pipeline
+
+on:
+  push:
+    branches: [main1]
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.MAVEN_DEPLOY_TOKEN }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+      OSSINDEX_USERNAME: ${{ secrets.OSSINDEX_USERNAME }}
+      OSSINDEX_PASSWORD: ${{ secrets.OSSINDEX_PASSWORD }}     
+
+    steps:
+      # Checkout Code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Set up Java
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          
+      - name: Clear old Maven cache
+        run: |
+          rm -rf ~/.m2/repository/org/springframework
+          rm -rf ~/.m2/repository/org/apache/tomcat
+
+      # Secret Scanning
+      #- name: Scan for hardcoded secrets
+      #  uses: trufflesecurity/trufflehog@v3.90.0
+      #  with:
+      #    path: .
+
+      # SonarQube Analysis - SAST
+      #- name: Run SonarQube Analysis
+      #  uses: sonarsource/sonarqube-scan-action@v2
+      #  with:
+      #    projectBaseDir: .
+      #    args: >
+      #      -Dsonar.projectKey=rootpromptnext_springboot-demo
+      #      -Dsonar.organization=rootpromptnext
+      #      -Dsonar.host.url=https://sonarcloud.io
+      #      -Dsonar.login=${{ secrets.SONAR_TOKEN }}        
+
+      - name: Install TruffleHog CLI
+        run: |
+          wget https://github.com/trufflesecurity/trufflehog/releases/download/v3.90.11/trufflehog_3.90.11_linux_amd64.tar.gz -O trufflehog.tar.gz
+          tar -xvf trufflehog.tar.gz
+          chmod +x trufflehog
+          mkdir -p ~/.local/bin
+          mv trufflehog ~/.local/bin/
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          trufflehog --version
+
+      - name: Run TruffleHog Secret Scan
+        run: |
+          echo "Running TruffleHog secret scan..."
+          trufflehog filesystem --directory=. || true
+
+      # Snyk Scan - SCA
+      #- name: Download Snyk CLI
+      #  run: |
+      #    wget -O snyk-linux https://github.com/snyk/cli/releases/download/v1.1294.3/snyk-linux
+      #    chmod +x snyk-linux
+      #    mv snyk-linux $HOME/snyk
+      #    echo "$HOME" >> $GITHUB_PATH
+      
+      #- name: Run Snyk scan
+      #  run: snyk monitor --all-projects
+      #  env:
+      #    SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      # OWASP Dependency-Check
+      #- name: Install OWASP Dependency-Check CLI
+      #  run: |
+      #    wget https://github.com/jeremylong/DependencyCheck/releases/download/v12.1.0/dependency-check-12.1.0-release.zip
+      #    unzip dependency-check-12.1.0-release.zip -d $HOME/dependency-check
+      #    chmod +x $HOME/dependency-check/dependency-check/bin/dependency-check.sh
+      #    echo "$HOME/dependency-check/dependency-check/bin" >> $GITHUB_PATH
+      
+      #- name: Run OWASP Dependency-Check Scan
+      #  run: |
+      #    mkdir -p dependency-check-report
+      #    $HOME/dependency-check/dependency-check/bin/dependency-check.sh \
+      #      --project "springboot-demo" \
+      #      --scan . \
+      #      --format HTML \
+      #      --out dependency-check-report \
+      #      --nvdApiKey ${{ secrets.NVD_API_KEY }} \
+      #      --ossIndexUser ${{ secrets.OSSINDEX_USERNAME }} \
+      #      --ossIndexPassword ${{ secrets.OSSINDEX_PASSWORD }} || true  # always pass
+          
+      #- name: Upload Dependency Check Report
+      #  uses: actions/upload-artifact@v4
+      #  with:
+      #    name: dependency-check-report
+      #    path: dependency-check-report
+
+      # Rename JAR
+      #- name: Rename JAR for Docker
+      #  run: mv target/*-SNAPSHOT.jar target/app.jar || mv target/*.jar target/app.jar
+
+      # Docker Build & Push
+      #- name: Log in to GitHub Container Registry
+      #  run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u rootpromptnext --password-stdin
+
+      #- name: Build Docker image
+      #  run: |
+      #    SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
+      #    echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_ENV
+      #    docker build -t ghcr.io/rootpromptnext/springboot-demo:$SHORT_SHA \
+      #                 -t ghcr.io/rootpromptnext/springboot-demo:latest .
+
+      # Container Scan (Trivy)
+      #- name: Run Trivy vulnerability scanner
+      #  uses: aquasecurity/trivy-action@0.33.1
+      #  with:
+      #    image-ref: ghcr.io/rootpromptnext/springboot-demo:${{ env.SHORT_SHA }}
+      #    format: table
+      #    exit-code: 0    # always pass
+      #    # exit-code: 1  # uncomment to demo fail
+      #    severity: CRITICAL,HIGH
+
+      # Push Docker Images
+      #- name: Push Docker images
+      #  run: |
+      #    docker push ghcr.io/rootpromptnext/springboot-demo:${{ env.SHORT_SHA }}
+      #    docker push ghcr.io/rootpromptnext/springboot-demo:latest
