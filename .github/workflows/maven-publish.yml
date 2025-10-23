@@ -1,7 +1,7 @@
 name: CI/CD Spring Boot Secure Pipeline
 on:
   push:
-    branches: [main]
+    branches: [main1]
 
 jobs:
   build-and-publish:
@@ -129,7 +129,8 @@ jobs:
       - name: Log in to GitHub Container Registry
         run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u rootpromptnext --password-stdin
 
-      #- name: Build Docker image
+      # Build Docker image
+      - name: Build Docker image
         run: |
           SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
           echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_ENV
