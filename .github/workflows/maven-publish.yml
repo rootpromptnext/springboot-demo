@@ -141,6 +141,29 @@ jobs:
       #    # exit-code: 1  # uncomment to demo fail
       #    severity: CRITICAL,HIGH
 
+      - name: Install Trivy 
+        run: |
+          wget https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh
+          bash install.sh
+          mkdir -p $HOME/.local/bin
+          mv ./bin/trivy $HOME/.local/bin/
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          trivy --version
+      - name: Run Trivy scan and save report
+        run: |
+          trivy image \
+            --format json \
+            --output trivy-report.json \
+            --severity CRITICAL,HIGH \
+            ghcr.io/rootpromptnext/springboot-demo:${{ env.SHORT_SHA }}
+      
+      - name: Upload Trivy Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: trivy-report.json
+          
+
       # Push Docker Images
       #- name: Push Docker images
       #  run: |
