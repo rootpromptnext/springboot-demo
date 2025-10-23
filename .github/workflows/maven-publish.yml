@@ -89,7 +89,7 @@ jobs:
           unzip -q sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux-x64.zip
           export PATH=$PATH:$(pwd)/sonar-scanner-${SONAR_SCANNER_VERSION}-linux-x64/bin
           sonar-scanner -X \
-            -Dsonar.projectKey=springboot-demo \
+            -Dsonar.projectKey=rootpromptnext \
             -Dsonar.organization=rootpromptnext \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
